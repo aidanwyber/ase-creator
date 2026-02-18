@@ -1,3 +1,5 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { ASE } from '../src';
 
@@ -206,6 +208,109 @@ describe('ASE', () => {
 				{ hex: 'NOT-HEX', position: 100 },
 			]),
 		).toThrow('Invalid gradient HEX color');
+	});
+
+	it('creates a manual verification ASE file with all features', async () => {
+		const ase = ASE.create({ groupName: 'Single Swatch' }).addColor(
+			'Red',
+			'#FF0000',
+		);
+
+		ase.addGroup('Three Colors');
+		['#FF0000', '#00FF00', '#0000FF'].forEach((hex, index) => {
+			ase.addColor(`Color ${index + 1}`, hex);
+		});
+
+		ase.addGroup('Warm').addColors([
+			{ name: 'Sunset Orange', hex: '#FF5E3A' },
+			{ name: 'Marigold', hex: '#FFB200' },
+			{ name: 'Rose', hex: '#E63946' },
+		]);
+
+		ase.addGroup('Cool').addColors([
+			{ name: 'Ocean', hex: '#0077B6' },
+			{ name: 'Mint', hex: '#2EC4B6' },
+			{ name: 'Indigo', hex: '#3A0CA3' },
+		]);
+
+		ase.addGroup('Red to Blue').addGradient(
+			[
+				{ hex: '#FF0000', position: 0 },
+				{ hex: '#0000FF', position: 100 },
+			],
+			{ steps: 5, prefix: 'Step' },
+		);
+
+		const bytes = ase.toBytes();
+		const outputDir = resolve(process.cwd(), 'manual-output');
+		const outputFile = resolve(outputDir, 'all-features.ase');
+		await mkdir(outputDir, { recursive: true });
+		await writeFile(outputFile, bytes);
+
+		const parsed = parseAse(bytes);
+		expect(parsed.groupNames).toEqual([
+			'Single Swatch',
+			'Three Colors',
+			'Warm',
+			'Cool',
+			'Red to Blue',
+		]);
+		expect(parsed.groupedColors['Single Swatch']).toEqual([
+			{ name: 'Red', hex: '#FF0000' },
+		]);
+		expect(parsed.groupedColors['Three Colors']).toEqual([
+			{ name: 'Color 1', hex: '#FF0000' },
+			{ name: 'Color 2', hex: '#00FF00' },
+			{ name: 'Color 3', hex: '#0000FF' },
+		]);
+		expect(parsed.groupedColors.Warm).toEqual([
+			{ name: 'Sunset Orange', hex: '#FF5E3A' },
+			{ name: 'Marigold', hex: '#FFB200' },
+			{ name: 'Rose', hex: '#E63946' },
+		]);
+		expect(parsed.groupedColors.Cool).toEqual([
+			{ name: 'Ocean', hex: '#0077B6' },
+			{ name: 'Mint', hex: '#2EC4B6' },
+			{ name: 'Indigo', hex: '#3A0CA3' },
+		]);
+		expect(parsed.groupedColors['Red to Blue']).toEqual([
+			{ name: 'Step 01 (0%)', hex: '#FF0000' },
+			{ name: 'Step 02 (25%)', hex: '#BF0040' },
+			{ name: 'Step 03 (50%)', hex: '#800080' },
+			{ name: 'Step 04 (75%)', hex: '#4000BF' },
+			{ name: 'Step 05 (100%)', hex: '#0000FF' },
+		]);
+
+		const preview = [
+			'Expected Adobe preview:',
+			'Group: Single Swatch',
+			'- Red   #FF0000',
+			'',
+			'Group: Three Colors',
+			'- Color 1   #FF0000',
+			'- Color 2   #00FF00',
+			'- Color 3   #0000FF',
+			'',
+			'Group: Warm',
+			'- Sunset Orange   #FF5E3A',
+			'- Marigold        #FFB200',
+			'- Rose            #E63946',
+			'',
+			'Group: Cool',
+			'- Ocean           #0077B6',
+			'- Mint            #2EC4B6',
+			'- Indigo          #3A0CA3',
+			'',
+			'Group: Red to Blue',
+			'- Step 01 (0%)     #FF0000',
+			'- Step 02 (25%)    #BF0040',
+			'- Step 03 (50%)    #800080',
+			'- Step 04 (75%)    #4000BF',
+			'- Step 05 (100%)   #0000FF',
+		].join('\n');
+
+		console.log(`[manual-check] Wrote ${outputFile}`);
+		console.log(preview);
 	});
 
 	it('downloads with a generated blob URL in browser-like environments', () => {
