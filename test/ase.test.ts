@@ -12,6 +12,7 @@ type ParsedAse = {
 	blockCount: number;
 	groupNames: string[];
 	colors: ParsedAseColor[];
+	groupedColors: Record<string, ParsedAseColor[]>;
 };
 
 const decodeAscii = (bytes: Uint8Array): string =>
@@ -43,6 +44,8 @@ const parseAse = (bytes: Uint8Array): ParsedAse => {
 
 	const groupNames: string[] = [];
 	const colors: ParsedAseColor[] = [];
+	const groupedColors: Record<string, ParsedAseColor[]> = {};
+	let activeGroupName: string | null = null;
 
 	for (let i = 0; i < blockCount; i += 1) {
 		const blockType = view.getUint16(offset, false);
@@ -60,6 +63,12 @@ const parseAse = (bytes: Uint8Array): ParsedAse => {
 				bytes.slice(offset, offset + nameBytesLength),
 			).replace(/\u0000$/, '');
 			groupNames.push(groupName);
+			groupedColors[groupName] = groupedColors[groupName] ?? [];
+			activeGroupName = groupName;
+		}
+
+		if (blockType === 0xc002) {
+			activeGroupName = null;
 		}
 
 		if (blockType === 0x0001) {
@@ -93,10 +102,17 @@ const parseAse = (bytes: Uint8Array): ParsedAse => {
 					.padStart(2, '0')
 					.toUpperCase();
 
-			colors.push({
+			const color = {
 				name: swatchName,
 				hex: `#${toHex(r)}${toHex(g)}${toHex(b)}`,
-			});
+			};
+			colors.push(color);
+			if (activeGroupName) {
+				const groupColors = groupedColors[activeGroupName];
+				if (groupColors) {
+					groupColors.push(color);
+				}
+			}
 		}
 
 		offset = blockEnd;
@@ -108,6 +124,7 @@ const parseAse = (bytes: Uint8Array): ParsedAse => {
 		blockCount,
 		groupNames,
 		colors,
+		groupedColors,
 	};
 };
 
@@ -124,6 +141,34 @@ describe('ASE', () => {
 		expect(parsed.colors).toEqual([
 			{ name: 'Primary', hex: '#123456' },
 			{ name: 'Accent', hex: '#ABCDEF' },
+		]);
+	});
+
+	it('supports multiple groups in one ASE file', () => {
+		const ase = ASE.create({ groupName: 'Warm' })
+			.addColors([
+				{ name: 'Sunset Orange', hex: '#FF5E3A' },
+				{ name: 'Marigold', hex: '#FFB200' },
+				{ name: 'Rose', hex: '#E63946' },
+			])
+			.addGroup('Cool')
+			.addColors([
+				{ name: 'Ocean', hex: '#0077B6' },
+				{ name: 'Mint', hex: '#2EC4B6' },
+				{ name: 'Indigo', hex: '#3A0CA3' },
+			]);
+
+		const parsed = parseAse(ase.toBytes());
+		expect(parsed.groupNames).toEqual(['Warm', 'Cool']);
+		expect(parsed.groupedColors.Warm).toEqual([
+			{ name: 'Sunset Orange', hex: '#FF5E3A' },
+			{ name: 'Marigold', hex: '#FFB200' },
+			{ name: 'Rose', hex: '#E63946' },
+		]);
+		expect(parsed.groupedColors.Cool).toEqual([
+			{ name: 'Ocean', hex: '#0077B6' },
+			{ name: 'Mint', hex: '#2EC4B6' },
+			{ name: 'Indigo', hex: '#3A0CA3' },
 		]);
 	});
 

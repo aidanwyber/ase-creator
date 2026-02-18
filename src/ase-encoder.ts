@@ -5,6 +5,11 @@ export type AseSwatch = {
 	hex: string;
 };
 
+export type AseGroup = {
+	name: string;
+	swatches: AseSwatch[];
+};
+
 const ASE_VERSION_MAJOR = 1;
 const ASE_VERSION_MINOR = 0;
 const BLOCK_COLOR_ENTRY = 0x0001;
@@ -76,21 +81,31 @@ const makeColorEntryBlock = (swatch: AseSwatch): Uint8Array => {
 	return makeBlock(BLOCK_COLOR_ENTRY, payload);
 };
 
-export const encodeAse = (
-	groupName: string,
-	swatches: AseSwatch[],
-): Uint8Array => {
-	if (swatches.length === 0) {
+const groupBlocks = (group: AseGroup): Uint8Array[] => {
+	const groupName = group.name.trim();
+	if (!groupName) {
+		throw new Error('Group name cannot be empty.');
+	}
+
+	return [
+		makeGroupStartBlock(groupName),
+		...group.swatches.map(makeColorEntryBlock),
+		makeGroupEndBlock(),
+	];
+};
+
+export const encodeAse = (groups: AseGroup[]): Uint8Array => {
+	const swatchCount = groups.reduce(
+		(sum, group) => sum + group.swatches.length,
+		0,
+	);
+	if (swatchCount === 0) {
 		throw new Error(
 			'At least one swatch is required to create an ASE file.',
 		);
 	}
 
-	const blocks = [
-		makeGroupStartBlock(groupName),
-		...swatches.map(makeColorEntryBlock),
-		makeGroupEndBlock(),
-	];
+	const blocks = groups.flatMap(groupBlocks);
 
 	const header = new Uint8Array(12);
 	const view = new DataView(header.buffer);

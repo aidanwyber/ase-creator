@@ -23,13 +23,21 @@ export type ASEGradientOptions = {
 	prefix?: string;
 };
 
+type ASEColorGroup = {
+	name: string;
+	swatches: ASEColor[];
+};
+
 export class ASE {
-	private groupName: string;
-	private swatches: ASEColor[];
+	private groups: ASEColorGroup[];
+	private activeGroupIndex: number;
 
 	private constructor(options?: ASECreateOptions) {
-		this.groupName = options?.groupName ?? 'ASE Creator Swatches';
-		this.swatches = [];
+		const groupName = normalizeGroupName(
+			options?.groupName ?? 'ASE Creator Swatches',
+		);
+		this.groups = [{ name: groupName, swatches: [] }];
+		this.activeGroupIndex = 0;
 		if (options?.colors?.length) {
 			this.addColors(options.colors);
 		}
@@ -47,11 +55,19 @@ export class ASE {
 	}
 
 	setGroupName(name: string): this {
-		const trimmed = name.trim();
-		if (!trimmed) {
-			throw new Error('Group name cannot be empty.');
+		this.getActiveGroup().name = normalizeGroupName(name);
+		return this;
+	}
+
+	addGroup(name: string, colors?: ASEColor[]): this {
+		this.groups.push({
+			name: normalizeGroupName(name),
+			swatches: [],
+		});
+		this.activeGroupIndex = this.groups.length - 1;
+		if (colors?.length) {
+			this.addColors(colors);
 		}
-		this.groupName = trimmed;
 		return this;
 	}
 
@@ -73,7 +89,7 @@ export class ASE {
 			throw new Error(`Invalid HEX color: ${color.hex}`);
 		}
 
-		this.swatches.push({ name, hex: normalizedHex });
+		this.getActiveGroup().swatches.push({ name, hex: normalizedHex });
 		return this;
 	}
 
@@ -122,12 +138,14 @@ export class ASE {
 	}
 
 	clear(): this {
-		this.swatches = [];
+		for (const group of this.groups) {
+			group.swatches = [];
+		}
 		return this;
 	}
 
 	toBytes(): Uint8Array {
-		return encodeAse(this.groupName, this.swatches);
+		return encodeAse(this.groups);
 	}
 
 	toArrayBuffer(): ArrayBuffer {
@@ -175,9 +193,25 @@ export class ASE {
 
 		URL.revokeObjectURL(blobUrl);
 	}
+
+	private getActiveGroup(): ASEColorGroup {
+		const group = this.groups[this.activeGroupIndex];
+		if (!group) {
+			throw new Error('No active ASE group is available.');
+		}
+		return group;
+	}
 }
 
 const formatPercentLabel = (position: number): string => {
 	const rounded = Math.round(position * 10) / 10;
 	return Number.isInteger(rounded) ? `${rounded}%` : `${rounded.toFixed(1)}%`;
+};
+
+const normalizeGroupName = (name: string): string => {
+	const trimmed = name.trim();
+	if (!trimmed) {
+		throw new Error('Group name cannot be empty.');
+	}
+	return trimmed;
 };
