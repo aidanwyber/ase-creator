@@ -11,21 +11,21 @@ npm install ase-creator
 ## Quick start
 
 ```ts
-import { ASE } from "ase-creator";
+import { ASE } from 'ase-creator';
 
-const ase = ASE.create({ groupName: "Brand Palette" })
-  .addColor("Primary", "#0066FF")
-  .addColor("Secondary", "#FFAA00")
-  .addGradient(
-    [
-      { hex: "#0066FF", position: 0 },
-      { hex: "#FFAA00", position: 100 }
-    ],
-    { steps: 6, prefix: "Blend" }
-  );
+const ase = ASE.create({ groupName: 'Brand Palette' })
+	.addColor('Primary', '#0066FF')
+	.addColor('Secondary', '#FFAA00')
+	.addGradient(
+		[
+			{ hex: '#0066FF', position: 0 },
+			{ hex: '#FFAA00', position: 100 },
+		],
+		{ steps: 6, prefix: 'Blend' },
+	);
 
 // Browser download:
-ase.download("brand-palette");
+ase.download('brand-palette');
 ```
 
 ## API
@@ -36,8 +36,8 @@ Creates a new ASE builder instance.
 
 ```ts
 type ASECreateOptions = {
-  groupName?: string;
-  colors?: Array<{ name: string; hex: string }>;
+	groupName?: string;
+	colors?: Array<{ name: string; hex: string }>;
 };
 ```
 
@@ -57,19 +57,19 @@ type ASECreateOptions = {
 
 ```ts
 type ASEGradientOptions = {
-  steps?: number; // clamped to 2..64, default 7
-  prefix?: string; // default "Step"
+	steps?: number; // clamped to 2..64, default 7
+	prefix?: string; // default "Step"
 };
 ```
 
 ## Node usage
 
 ```ts
-import { writeFile } from "node:fs/promises";
-import { ASE } from "ase-creator";
+import { writeFile } from 'node:fs/promises';
+import { ASE } from 'ase-creator';
 
-const ase = ASE.create({ groupName: "CLI Palette" }).addColor("Ink", "#111111");
-await writeFile("palette.ase", ase.toBytes());
+const ase = ASE.create({ groupName: 'CLI Palette' }).addColor('Ink', '#111111');
+await writeFile('palette.ase', ase.toBytes());
 ```
 
 ## Development

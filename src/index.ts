@@ -1,7 +1,7 @@
-export { ASE } from "./ase";
+export { ASE } from './ase';
 export type {
-  ASEColor,
-  ASECreateOptions,
-  ASEGradientOptions,
-  ASEGradientStop
-} from "./ase";
+	ASEColor,
+	ASECreateOptions,
+	ASEGradientOptions,
+	ASEGradientStop,
+} from './ase';

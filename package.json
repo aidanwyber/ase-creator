@@ -1,47 +1,47 @@
 {
-  "name": "ase-creator",
-  "version": "0.1.0",
-  "description": "Simple JavaScript/TypeScript library to create and download Adobe Swatch Exchange (.ase) files.",
-  "type": "module",
-  "sideEffects": false,
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "scripts": {
-    "build": "tsup",
-    "test": "vitest run",
-    "check": "tsc --noEmit",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm run check && npm test && npm run build"
-  },
-  "keywords": [
-    "ase",
-    "adobe",
-    "swatches",
-    "palette",
-    "design-tokens",
-    "colors"
-  ],
-  "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
-  "author": "",
-  "devDependencies": {
-    "tsup": "^8.3.5",
-    "typescript": "^5.7.3",
-    "vitest": "^3.2.4"
-  }
+	"name": "ase-creator",
+	"version": "0.1.0",
+	"description": "Simple JavaScript/TypeScript library to create and download Adobe Swatch Exchange (.ase) files.",
+	"type": "module",
+	"sideEffects": false,
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		}
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"build": "tsup",
+		"test": "vitest run",
+		"check": "tsc --noEmit",
+		"prepare": "npm run build",
+		"prepublishOnly": "npm run check && npm test && npm run build"
+	},
+	"keywords": [
+		"ase",
+		"adobe",
+		"swatches",
+		"palette",
+		"design-tokens",
+		"colors"
+	],
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"author": "Aidan Wyber",
+	"devDependencies": {
+		"tsup": "^8.3.5",
+		"typescript": "^5.7.3",
+		"vitest": "^3.2.4"
+	}
 }
